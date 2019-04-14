@@ -16,7 +16,8 @@ def gen_objective(command, suggest_params):
             elif type_ == 'i':
                 param = trial.suggest_int(name, min_, max_)
             else:
-                raise RuntimeError()
+                raise RuntimeError(
+                    'unsupported suggest type: {}'.format(type_))
             return (name, param)
 
         params = [make_arg(trial, k, v) for k, v in suggest_params.items()]
@@ -35,6 +36,8 @@ def gen_objective(command, suggest_params):
                 step = int(splitted_out[1])
                 intermediate_value = float(splitted_out[2])
                 trial.report(intermediate_value, step)
+                if trial.should_prune(step):
+                    raise optuna.structs.TrialPruned()
             elif 'OPTUNA_FINISHED' in out:
                 p.terminate()
                 return float(out.split()[1])
